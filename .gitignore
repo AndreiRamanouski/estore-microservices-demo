@@ -32,4 +32,7 @@ build/
 ### VS Code ###
 .vscode/
 
-.mvn/
+.mvn
+*.jar
+mvnw
+mvnw.cmd
