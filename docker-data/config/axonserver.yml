@@ -1,0 +1,7 @@
+server:
+  port: 8024
+
+axoniq:
+  axonserver:
+    name: My Axon Server
+    hostname: localhost
