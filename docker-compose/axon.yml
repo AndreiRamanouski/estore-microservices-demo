@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  axonserver:
+#    used this particular version to enable devmode
+    image: axoniq/axonserver:4.6.7
+    hostname: axonserver
+    environment:
+      - AXONIQ_AXONSERVER_DEVMODE_ENABLED=true
+    ports:
+      - '8024:8024'
+      - '8124:8124'
+    volumes:
+      - /Users/andrejromanovskij/IdeaProjects/estore/docker-data/data:/data
+      - /Users/andrejromanovskij/IdeaProjects/estore/docker-data/eventdata:/eventdata
+      - /Users/andrejromanovskij/IdeaProjects/estore/docker-data/config:/config
