@@ -1,6 +1,6 @@
-package com.appsdev.estore.product.repository;
+package com.appsdev.estore.product.data.repository;
 
-import com.appsdev.estore.product.entity.ProductEntity;
+import com.appsdev.estore.product.data.entity.ProductEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

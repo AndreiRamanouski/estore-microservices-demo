@@ -1,7 +1,7 @@
-package com.appsdev.estore.product.controller;
+package com.appsdev.estore.product.command.controller;
 
 import com.appsdev.estore.product.command.CreateProductCommand;
-import com.appsdev.estore.product.model.CreateProductRestModel;
+import com.appsdev.estore.product.command.model.CreateProductRestModel;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RequestMapping("products")
 @RequiredArgsConstructor
-public class ProductController {
+public class ProductCommandController {
 
     private final CommandGateway commandGateway;
     private final Environment env;
