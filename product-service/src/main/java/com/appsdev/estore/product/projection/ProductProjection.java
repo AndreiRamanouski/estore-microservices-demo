@@ -1,8 +1,8 @@
 package com.appsdev.estore.product.projection;
 
-import com.appsdev.estore.product.entity.ProductEntity;
-import com.appsdev.estore.product.events.ProductCreateEvent;
-import com.appsdev.estore.product.repository.ProductRepository;
+import com.appsdev.estore.product.data.entity.ProductEntity;
+import com.appsdev.estore.product.command.events.ProductCreateEvent;
+import com.appsdev.estore.product.data.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.eventhandling.EventHandler;

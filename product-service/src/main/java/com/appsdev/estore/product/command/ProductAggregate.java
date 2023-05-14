@@ -1,6 +1,6 @@
 package com.appsdev.estore.product.command;
 
-import com.appsdev.estore.product.events.ProductCreateEvent;
+import com.appsdev.estore.product.command.events.ProductCreateEvent;
 import java.math.BigDecimal;
 import java.util.Objects;
 import lombok.NoArgsConstructor;

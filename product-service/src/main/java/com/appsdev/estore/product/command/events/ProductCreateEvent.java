@@ -1,4 +1,4 @@
-package com.appsdev.estore.product.events;
+package com.appsdev.estore.product.command.events;
 
 import java.math.BigDecimal;
 import lombok.Data;

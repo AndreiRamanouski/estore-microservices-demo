@@ -1,4 +1,4 @@
-package com.appsdev.estore.product.model;
+package com.appsdev.estore.product.command.model;
 
 import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
