@@ -27,3 +27,9 @@ spring:
       settings:
         web-allow-others: true
 #        http://localhost:8082/product-service/h2-console/
+
+axon:
+  eventhandling:
+    processors:
+      product-group:
+        mode: subscribing

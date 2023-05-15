@@ -1,11 +1,13 @@
 package com.appsdev.estore.product.command.interceptor;
 
 import com.appsdev.estore.product.command.CreateProductCommand;
-import java.math.BigDecimal;
+import com.appsdev.estore.product.data.entity.ProductLookupEntity;
+import com.appsdev.estore.product.data.repository.ProductLookupRepository;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import javax.annotation.Nonnull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.CommandMessage;
 import org.axonframework.messaging.MessageDispatchInterceptor;
@@ -13,7 +15,10 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class CreateProductCommandInterceptor implements MessageDispatchInterceptor<CommandMessage<?>> {
+
+    private final ProductLookupRepository productLookupRepository;
 
     @Nonnull
     @Override
@@ -23,14 +28,18 @@ public class CreateProductCommandInterceptor implements MessageDispatchIntercept
             log.info("Intercepted command {}", command.getPayloadType());
             if (CreateProductCommand.class.equals(command.getPayloadType())) {
                 CreateProductCommand createProductCommand = (CreateProductCommand) command.getPayload();
-                if (createProductCommand.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
-                    log.error("Price cannot be less or equal to zero");
-                    throw new IllegalArgumentException("Price cannot be less or equal to zero");
+
+                ProductLookupEntity byProductIdOrTitle = productLookupRepository.findByProductIdOrTitle(
+                        createProductCommand.getProductId(),
+                        createProductCommand.getTitle());
+                if (Objects.nonNull(byProductIdOrTitle)) {
+                    log.info("Product already exists");
+                    throw new IllegalStateException(
+                            "Product already exists");
+                } else {
+                    log.info("Save a new product");
                 }
-                if (Objects.isNull(createProductCommand.getTitle()) || createProductCommand.getTitle().isEmpty()) {
-                    log.error("Title cannot be empty");
-                    throw new IllegalArgumentException("Title cannot be empty");
-                }
+
 
             }
             return command;
