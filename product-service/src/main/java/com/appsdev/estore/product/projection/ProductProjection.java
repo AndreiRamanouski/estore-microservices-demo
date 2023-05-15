@@ -5,12 +5,14 @@ import com.appsdev.estore.product.command.events.ProductCreateEvent;
 import com.appsdev.estore.product.data.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@ProcessingGroup("product-group")
 public class ProductProjection {
 
     private final ProductRepository productRepository;
