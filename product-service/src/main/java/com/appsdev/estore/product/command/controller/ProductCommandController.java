@@ -3,6 +3,7 @@ package com.appsdev.estore.product.command.controller;
 import com.appsdev.estore.product.command.CreateProductCommand;
 import com.appsdev.estore.product.command.model.CreateProductRestModel;
 import java.util.UUID;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.gateway.CommandGateway;
@@ -23,7 +24,7 @@ public class ProductCommandController {
 
 
     @PostMapping
-    public String createProduct(@RequestBody CreateProductRestModel createProductRestModel) {
+    public String createProduct(@RequestBody @Valid CreateProductRestModel createProductRestModel) {
         log.info("createProduct");
 
         CreateProductCommand build = CreateProductCommand.builder()
