@@ -1,9 +1,11 @@
 package com.appsdev.estore.product;
 
 import com.appsdev.estore.product.command.interceptor.CreateProductCommandInterceptor;
-import javax.annotation.PostConstruct;
+import com.appsdev.estore.product.core.error.ProductsServiceEventsErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.axonframework.commandhandling.CommandBus;
+import org.axonframework.config.EventProcessingConfigurer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
@@ -13,15 +15,22 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @RequiredArgsConstructor
 public class ProductsServiceApplication {
 
-    private final CreateProductCommandInterceptor commandInterceptor;
-    private final CommandBus commandBus;
 
     public static void main(String[] args) {
         SpringApplication.run(ProductsServiceApplication.class, args);
     }
 
-    @PostConstruct
-    public void registerCreateProductCommandInterceptor() {
+    @Autowired
+    public void registerCreateProductCommandInterceptor(CreateProductCommandInterceptor commandInterceptor,
+            CommandBus commandBus) {
         commandBus.registerDispatchInterceptor(commandInterceptor);
     }
+
+    @Autowired
+    public void configure(EventProcessingConfigurer configurer) {
+        configurer.registerListenerInvocationErrorHandler("product-group",
+                conf -> new ProductsServiceEventsErrorHandler());
+    }
+
+
 }

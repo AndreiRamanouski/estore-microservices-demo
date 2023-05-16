@@ -24,7 +24,7 @@ public class ProductAggregate {
     private Integer quantity;
 
     @CommandHandler
-    public ProductAggregate(CreateProductCommand command) {
+    public ProductAggregate(CreateProductCommand command) throws Exception{
         // Validate create product command
         if (command.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Price cannot be less or equal to zero");
