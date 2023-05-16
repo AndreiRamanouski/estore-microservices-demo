@@ -36,11 +36,8 @@ public class ProductCommandController {
 
 
         String returnValue;
-        try {
-            returnValue = commandGateway.sendAndWait(build);
-        } catch (Exception exception){
-            returnValue = exception.getLocalizedMessage();
-        }
+        returnValue = commandGateway.sendAndWait(build);
+
         log.info("returnValue is {}", returnValue);
         return returnValue;
     }
