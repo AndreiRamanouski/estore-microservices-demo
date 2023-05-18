@@ -1,5 +1,7 @@
 package com.appsdev.estore.product.command;
 
+import com.appdev.estore.core.core.command.ReserveProductCommand;
+import com.appdev.estore.core.core.event.ProductReservedEvent;
 import com.appsdev.estore.product.command.events.ProductCreateEvent;
 import java.math.BigDecimal;
 import java.util.Objects;
@@ -39,6 +41,22 @@ public class ProductAggregate {
         AggregateLifecycle.apply(productCreateEvent);
     }
 
+    @CommandHandler
+    public void handle(ReserveProductCommand reserveProductCommand){
+        log.info("handle ReserveProductCommand");
+        if(quantity < reserveProductCommand.getQuantity()){
+            throw new IllegalArgumentException("Not enough products in stock");
+        }
+        ProductReservedEvent reservedEvent = ProductReservedEvent.builder()
+                .orderId(reserveProductCommand.getOrderId())
+                .userId(reserveProductCommand.getUserId())
+                .quantity(reserveProductCommand.getQuantity())
+                .productId(reserveProductCommand.getProductId())
+                .build();
+
+        AggregateLifecycle.apply(reservedEvent);
+    }
+
     @EventSourcingHandler
     public void on(ProductCreateEvent productCreateEvent){
         log.info("Aggregate product with id {}", productCreateEvent.getProductId());
@@ -46,5 +64,11 @@ public class ProductAggregate {
         this.price = productCreateEvent.getPrice();
         this.quantity = productCreateEvent.getQuantity();
         this.title = productCreateEvent.getTitle();
+    }
+
+    @EventSourcingHandler
+    public void on(ProductReservedEvent productReservedEvent){
+        log.info("on ProductReservedEvent");
+        this.quantity -= productReservedEvent.getQuantity();
     }
 }
