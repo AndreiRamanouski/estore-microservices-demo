@@ -1,8 +1,14 @@
 package com.appdev.estore.order.orderservice.saga;
 
+import com.appdev.estore.core.core.command.ProcessPaymentCommand;
 import com.appdev.estore.core.core.command.ReserveProductCommand;
+import com.appdev.estore.core.core.data.FetchUserPaymentDetailsQuery;
 import com.appdev.estore.core.core.event.ProductReservedEvent;
+import com.appdev.estore.core.core.user.User;
 import com.appdev.estore.order.orderservice.command.event.OrderCreateEvent;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,8 +16,10 @@ import org.axonframework.commandhandling.CommandCallback;
 import org.axonframework.commandhandling.CommandMessage;
 import org.axonframework.commandhandling.CommandResultMessage;
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.axonframework.messaging.responsetypes.ResponseTypes;
 import org.axonframework.modelling.saga.SagaEventHandler;
 import org.axonframework.modelling.saga.StartSaga;
+import org.axonframework.queryhandling.QueryGateway;
 import org.axonframework.spring.stereotype.Saga;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -22,6 +30,9 @@ public class OrderSaga {
 
     @Autowired
     private transient CommandGateway commandGateway;
+
+    @Autowired
+    private transient QueryGateway queryGateway;
 
     @StartSaga
     @SagaEventHandler(associationProperty = "orderId")
@@ -51,7 +62,41 @@ public class OrderSaga {
     public void handle(ProductReservedEvent productReservedEvent) {
         log.info("Product reserved orderId {} productId {}", productReservedEvent.getOrderId(),
                 productReservedEvent.getProductId());
+        log.info("Fetch user details for the user {}", productReservedEvent.getUserId());
         //        process payment
+        User user = null;
+        try {
+
+            FetchUserPaymentDetailsQuery query = new FetchUserPaymentDetailsQuery(productReservedEvent.getUserId());
+            user = queryGateway.query(query, ResponseTypes.instanceOf(User.class)).join();
+
+        } catch (Exception exception) {
+            log.error("Exception {}", exception.getLocalizedMessage());
+            //start compensating transaction
+
+            return;
+        }
+        log.info("Found user with id {}, and card payment name {}", user.getUserId(),
+                user.getPaymentDetails().getName());
+
+        ProcessPaymentCommand command = ProcessPaymentCommand.builder()
+                .orderId(productReservedEvent.getOrderId())
+                .paymentId(UUID.randomUUID().toString())
+                .paymentDetails(user.getPaymentDetails())
+                .build();
+
+        String paymentResult = null;
+        try {
+            log.info("");
+            paymentResult = commandGateway.sendAndWait(command, 10, TimeUnit.SECONDS);
+        } catch (Exception exception) {
+            log.error("Exception {}", exception.getLocalizedMessage());
+            // start compensating transaction
+        }
+        if (Objects.isNull(paymentResult)) {
+            log.info("The Process payment command returned an error, starting compensating transaction...");
+        }
+
     }
 
 }
