@@ -1,8 +1,10 @@
-package com.appsdev.estore.product.command.projection;
+package com.appsdev.estore.product.query.handler;
 
+import com.appdev.estore.core.core.event.ProductReservedEvent;
 import com.appsdev.estore.product.command.events.ProductCreateEvent;
 import com.appsdev.estore.product.data.entity.ProductEntity;
 import com.appsdev.estore.product.data.repository.ProductRepository;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.config.ProcessingGroup;
@@ -14,7 +16,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Slf4j
 @ProcessingGroup("product-group")
-public class ProductProjection {
+public class ProductEventsHandler {
 
     private final ProductRepository productRepository;
 
@@ -46,5 +48,17 @@ public class ProductProjection {
         } catch (IllegalArgumentException exception) {
             exception.printStackTrace();
         }
+    }
+
+    @EventHandler
+    public void on(ProductReservedEvent productReservedEvent) {
+        log.info("ProductReservedEvent is called for product with id {}", productReservedEvent.getProductId());
+        ProductEntity byProductId = productRepository.findByProductId(productReservedEvent.getProductId());
+        if (Objects.isNull(byProductId)) {
+            throw new IllegalStateException("Product does not exist");
+        }
+        byProductId.setQuantity(byProductId.getQuantity() - productReservedEvent.getQuantity());
+        ProductEntity save = productRepository.save(byProductId);
+        log.info("Product quantity for {} updated {}", save.getTitle(), save.getQuantity());
     }
 }

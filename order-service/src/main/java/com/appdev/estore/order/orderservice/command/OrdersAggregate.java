@@ -26,7 +26,7 @@ public class OrdersAggregate {
 
     @CommandHandler
     public OrdersAggregate(CreateOrderCommand command){
-
+        log.info("OrdersAggregate");
         if (command.getQuantity() < 1){
             throw new IllegalArgumentException("Quantity cannot be less than 1");
         }
