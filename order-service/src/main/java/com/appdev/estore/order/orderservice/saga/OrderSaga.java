@@ -3,8 +3,11 @@ package com.appdev.estore.order.orderservice.saga;
 import com.appdev.estore.core.core.command.ProcessPaymentCommand;
 import com.appdev.estore.core.core.command.ReserveProductCommand;
 import com.appdev.estore.core.core.data.FetchUserPaymentDetailsQuery;
+import com.appdev.estore.core.core.event.PaymentProcessedEvent;
 import com.appdev.estore.core.core.event.ProductReservedEvent;
 import com.appdev.estore.core.core.user.User;
+import com.appdev.estore.order.orderservice.command.ApproveOrderCommand;
+import com.appdev.estore.order.orderservice.command.event.OrderApprovedEvent;
 import com.appdev.estore.order.orderservice.command.event.OrderCreateEvent;
 import java.util.Objects;
 import java.util.UUID;
@@ -17,6 +20,7 @@ import org.axonframework.commandhandling.CommandMessage;
 import org.axonframework.commandhandling.CommandResultMessage;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.messaging.responsetypes.ResponseTypes;
+import org.axonframework.modelling.saga.EndSaga;
 import org.axonframework.modelling.saga.SagaEventHandler;
 import org.axonframework.modelling.saga.StartSaga;
 import org.axonframework.queryhandling.QueryGateway;
@@ -100,5 +104,22 @@ public class OrderSaga {
 
     }
 
+
+    @SagaEventHandler(associationProperty = "orderId")
+    public void handle(PaymentProcessedEvent event) {
+        log.info("handle PaymentProcessedEvent");
+        ApproveOrderCommand command = ApproveOrderCommand.builder().orderId(event.getOrderId()).build();
+        commandGateway.send(command);
+    }
+
+    @EndSaga
+    @SagaEventHandler(associationProperty = "orderId")
+    public void handle(OrderApprovedEvent event) {
+        log.info("handle OrderApprovedEvent");
+        log.info("The order SAGA has been completed!!! Order id {} and status {}", event.getOrderId(),
+                event.getOrderStatus());
+        //add response entity
+        //        SagaLifecycle.end(); the same as @EndSaga
+    }
 
 }
