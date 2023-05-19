@@ -1,14 +1,18 @@
 package com.appdev.estore.order.orderservice.saga;
 
+import com.appdev.estore.core.core.command.CancelProductReservationCommand;
 import com.appdev.estore.core.core.command.ProcessPaymentCommand;
 import com.appdev.estore.core.core.command.ReserveProductCommand;
 import com.appdev.estore.core.core.data.FetchUserPaymentDetailsQuery;
 import com.appdev.estore.core.core.event.PaymentProcessedEvent;
+import com.appdev.estore.core.core.event.ProductReservationCanceledEvent;
 import com.appdev.estore.core.core.event.ProductReservedEvent;
 import com.appdev.estore.core.core.user.User;
-import com.appdev.estore.order.orderservice.command.ApproveOrderCommand;
+import com.appdev.estore.order.orderservice.command.commands.ApproveOrderCommand;
+import com.appdev.estore.order.orderservice.command.commands.RejectOrderCommand;
 import com.appdev.estore.order.orderservice.command.event.OrderApprovedEvent;
 import com.appdev.estore.order.orderservice.command.event.OrderCreateEvent;
+import com.appdev.estore.order.orderservice.command.event.OrderRejectEvent;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -74,10 +78,13 @@ public class OrderSaga {
             FetchUserPaymentDetailsQuery query = new FetchUserPaymentDetailsQuery(productReservedEvent.getUserId());
             user = queryGateway.query(query, ResponseTypes.instanceOf(User.class)).join();
 
+            if (Objects.isNull(user) || Objects.isNull(user.getPaymentDetails())) {
+                cancelProductReservation(productReservedEvent, "No payment details");
+            }
         } catch (Exception exception) {
             log.error("Exception {}", exception.getLocalizedMessage());
             //start compensating transaction
-
+            cancelProductReservation(productReservedEvent, exception.getLocalizedMessage());
             return;
         }
         log.info("Found user with id {}, and card payment name {}", user.getUserId(),
@@ -97,11 +104,26 @@ public class OrderSaga {
         } catch (Exception exception) {
             log.error("Exception {}", exception.getLocalizedMessage());
             // start compensating transaction
+            cancelProductReservation(productReservedEvent, exception.getLocalizedMessage());
+            return;
         }
-        if (Objects.isNull(paymentResult)) {
-            log.info("The Process payment command returned an error, starting compensating transaction...");
+        if (!Objects.isNull(paymentResult)) {
+
+            log.info("The Process payment command returned is null, starting compensating transaction...");
+            cancelProductReservation(productReservedEvent, "Cannot process with provided details");
         }
 
+    }
+
+    private void cancelProductReservation(ProductReservedEvent event, String reason) {
+        log.info("cancelProductReservation for product id {}", event.getProductId());
+        commandGateway.send(CancelProductReservationCommand.builder()
+                .orderId(event.getOrderId())
+                .productId(event.getProductId())
+                .quantity(event.getQuantity())
+                .userId(event.getUserId())
+                .reason(reason)
+                .build());
     }
 
 
@@ -116,10 +138,26 @@ public class OrderSaga {
     @SagaEventHandler(associationProperty = "orderId")
     public void handle(OrderApprovedEvent event) {
         log.info("handle OrderApprovedEvent");
-        log.info("The order SAGA has been completed!!! Order id {} and status {}", event.getOrderId(),
+        log.info("The order SAGA has been completed!!! The order is approved. Order id {} and status {}",
+                event.getOrderId(),
                 event.getOrderStatus());
         //add response entity
         //        SagaLifecycle.end(); the same as @EndSaga
+    }
+
+    @SagaEventHandler(associationProperty = "orderId")
+    public void handle(ProductReservationCanceledEvent event) {
+        log.info("handle ProductReservationCanceledEvent order id {} reason {}", event.getOrderId(), event.getReason());
+        commandGateway.send(RejectOrderCommand.builder().orderId(event.getOrderId()).reason(event.getReason()).build());
+    }
+
+    @EndSaga
+    @SagaEventHandler(associationProperty = "orderId")
+    public void handle(OrderRejectEvent event) {
+        log.info("handle OrderRejectEvent");
+        log.info("The order saga has been completed!!! The order has been canceled. Order id {}, reason {}",
+                event.getOrderId(), event.getReason());
+
     }
 
 }

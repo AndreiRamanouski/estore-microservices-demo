@@ -28,7 +28,9 @@ public class PaymentAggregate {
         PaymentDetails paymentDetails = command.getPaymentDetails();
         {
             log.info("Validate payment details for {}", paymentDetails.getName());
+            // set true to test compensating transactions
             if (false) {
+                log.error("Invalid payment details");
                 throw new IllegalStateException("Invalid payment details");
             }
         }

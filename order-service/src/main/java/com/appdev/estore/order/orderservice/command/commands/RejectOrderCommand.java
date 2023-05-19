@@ -1,4 +1,4 @@
-package com.appdev.estore.order.orderservice.command;
+package com.appdev.estore.order.orderservice.command.commands;
 
 import lombok.Builder;
 import lombok.Data;
@@ -6,8 +6,9 @@ import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
 @Data
 @Builder
-public class ApproveOrderCommand {
+public class RejectOrderCommand {
 
     @TargetAggregateIdentifier
     private final String orderId;
+    private final String reason;
 }

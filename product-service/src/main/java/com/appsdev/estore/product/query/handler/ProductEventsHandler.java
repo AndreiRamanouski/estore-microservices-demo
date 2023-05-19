@@ -1,5 +1,6 @@
 package com.appsdev.estore.product.query.handler;
 
+import com.appdev.estore.core.core.event.ProductReservationCanceledEvent;
 import com.appdev.estore.core.core.event.ProductReservedEvent;
 import com.appsdev.estore.product.command.events.ProductCreateEvent;
 import com.appsdev.estore.product.data.entity.ProductEntity;
@@ -53,12 +54,29 @@ public class ProductEventsHandler {
     @EventHandler
     public void on(ProductReservedEvent productReservedEvent) {
         log.info("ProductReservedEvent is called for product with id {}", productReservedEvent.getProductId());
-        ProductEntity byProductId = productRepository.findByProductId(productReservedEvent.getProductId());
+        getProductEntityAndUpdate(productReservedEvent.getProductId(),
+                productReservedEvent.getQuantity(), false);
+
+    }
+
+    @EventHandler
+    public void on(ProductReservationCanceledEvent event) {
+        log.info("ProductReservationCanceledEvent is called for product with id {}", event.getProductId());
+        getProductEntityAndUpdate(event.getProductId(),
+                event.getQuantity(), true);
+    }
+
+    private void getProductEntityAndUpdate(String productId, int quantity, boolean cancel) {
+        ProductEntity byProductId = productRepository.findByProductId(productId);
         if (Objects.isNull(byProductId)) {
             throw new IllegalStateException("Product does not exist");
         }
-        byProductId.setQuantity(byProductId.getQuantity() - productReservedEvent.getQuantity());
-        ProductEntity save = productRepository.save(byProductId);
-        log.info("Product quantity for {} updated {}", save.getTitle(), save.getQuantity());
+        if (cancel) {
+            byProductId.setQuantity(byProductId.getQuantity() + quantity);
+        } else {
+            byProductId.setQuantity(byProductId.getQuantity() - quantity);
+        }
+        ProductEntity productEntity = productRepository.saveAndFlush(byProductId);
+        log.info("Product quantity for {} updated to {}", productEntity.getTitle(), productEntity.getQuantity());
     }
 }

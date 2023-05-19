@@ -29,4 +29,5 @@ public class OrderEntity {
     private String addressId;
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
+    private String reason;
 }

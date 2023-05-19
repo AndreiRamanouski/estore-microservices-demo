@@ -1,7 +1,11 @@
 package com.appdev.estore.order.orderservice.command;
 
+import com.appdev.estore.order.orderservice.command.commands.ApproveOrderCommand;
+import com.appdev.estore.order.orderservice.command.commands.CreateOrderCommand;
+import com.appdev.estore.order.orderservice.command.commands.RejectOrderCommand;
 import com.appdev.estore.order.orderservice.command.event.OrderApprovedEvent;
 import com.appdev.estore.order.orderservice.command.event.OrderCreateEvent;
+import com.appdev.estore.order.orderservice.command.event.OrderRejectEvent;
 import com.appdev.estore.order.orderservice.shared.OrderStatus;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +48,13 @@ public class OrdersAggregate {
         AggregateLifecycle.apply(event);
     }
 
+    @CommandHandler
+    public void handle(RejectOrderCommand command) {
+        log.info("handle RejectOrderCommand");
+        AggregateLifecycle.apply(
+                OrderRejectEvent.builder().orderId(command.getOrderId()).reason(command.getReason()).build());
+    }
+
     @EventSourcingHandler
     public void on(OrderApprovedEvent event) {
         log.info("on OrderApprovedEvent for order id {} and status {}", event.getOrderId(), event.getOrderStatus());
@@ -58,6 +69,13 @@ public class OrdersAggregate {
         this.productId = event.getProductId();
         this.quantity = event.getQuantity();
         this.addressId = event.getAddressId();
+        this.orderStatus = event.getOrderStatus();
+    }
+
+
+    @EventSourcingHandler
+    public void on(OrderRejectEvent event) {
+        log.info("on OrderRejectEvent");
         this.orderStatus = event.getOrderStatus();
     }
 }

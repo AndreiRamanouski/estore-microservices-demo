@@ -1,4 +1,4 @@
-package com.appdev.estore.order.orderservice.command;
+package com.appdev.estore.order.orderservice.command.commands;
 
 import com.appdev.estore.order.orderservice.shared.OrderStatus;
 import lombok.Builder;
