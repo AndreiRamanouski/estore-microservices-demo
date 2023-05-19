@@ -87,8 +87,9 @@ public class OrderSaga {
 
         String paymentResult = null;
         try {
-            log.info("");
+            log.info("Sent payment for verification");
             paymentResult = commandGateway.sendAndWait(command, 10, TimeUnit.SECONDS);
+            log.info("Payment result {}", paymentResult);
         } catch (Exception exception) {
             log.error("Exception {}", exception.getLocalizedMessage());
             // start compensating transaction
@@ -98,5 +99,6 @@ public class OrderSaga {
         }
 
     }
+
 
 }
