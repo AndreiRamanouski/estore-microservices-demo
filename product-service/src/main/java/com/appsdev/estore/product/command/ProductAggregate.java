@@ -1,6 +1,8 @@
 package com.appsdev.estore.product.command;
 
+import com.appdev.estore.core.core.command.CancelProductReservationCommand;
 import com.appdev.estore.core.core.command.ReserveProductCommand;
+import com.appdev.estore.core.core.event.ProductReservationCanceledEvent;
 import com.appdev.estore.core.core.event.ProductReservedEvent;
 import com.appsdev.estore.product.command.events.ProductCreateEvent;
 import java.math.BigDecimal;
@@ -26,7 +28,7 @@ public class ProductAggregate {
     private Integer quantity;
 
     @CommandHandler
-    public ProductAggregate(CreateProductCommand command) throws Exception{
+    public ProductAggregate(CreateProductCommand command) throws Exception {
         // Validate create product command
         if (command.getPrice().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Price cannot be less or equal to zero");
@@ -42,9 +44,9 @@ public class ProductAggregate {
     }
 
     @CommandHandler
-    public void handle(ReserveProductCommand reserveProductCommand){
+    public void handle(ReserveProductCommand reserveProductCommand) {
         log.info("handle ReserveProductCommand");
-        if(quantity < reserveProductCommand.getQuantity()){
+        if (quantity < reserveProductCommand.getQuantity()) {
             throw new IllegalArgumentException("Not enough products in stock");
         }
         ProductReservedEvent reservedEvent = ProductReservedEvent.builder()
@@ -57,8 +59,22 @@ public class ProductAggregate {
         AggregateLifecycle.apply(reservedEvent);
     }
 
+    @CommandHandler
+    public void handle(CancelProductReservationCommand command) {
+        log.info("handle CancelProductReservationCommand for product id {}, reason {}", command.getProductId(),
+                command.getReason());
+        ProductReservationCanceledEvent event = ProductReservationCanceledEvent.builder()
+                .orderId(command.getOrderId())
+                .userId(command.getUserId())
+                .productId(command.getProductId())
+                .reason(command.getReason())
+                .quantity(command.getQuantity())
+                .build();
+        AggregateLifecycle.apply(event);
+    }
+
     @EventSourcingHandler
-    public void on(ProductCreateEvent productCreateEvent){
+    public void on(ProductCreateEvent productCreateEvent) {
         log.info("Aggregate product with id {}", productCreateEvent.getProductId());
         this.productId = productCreateEvent.getProductId();
         this.price = productCreateEvent.getPrice();
@@ -67,8 +83,14 @@ public class ProductAggregate {
     }
 
     @EventSourcingHandler
-    public void on(ProductReservedEvent productReservedEvent){
+    public void on(ProductReservedEvent productReservedEvent) {
         log.info("on ProductReservedEvent");
         this.quantity -= productReservedEvent.getQuantity();
+    }
+
+    @EventSourcingHandler
+    public void on(ProductReservationCanceledEvent event) {
+        log.info("on ProductReservationCanceledEvent");
+        this.quantity += event.getQuantity();
     }
 }

@@ -1,6 +1,6 @@
 package com.appdev.estore.order.orderservice.command.controller;
 
-import com.appdev.estore.order.orderservice.command.CreateOrderCommand;
+import com.appdev.estore.order.orderservice.command.commands.CreateOrderCommand;
 import com.appdev.estore.order.orderservice.command.model.request.OrderRequest;
 import com.appdev.estore.order.orderservice.shared.OrderStatus;
 import java.util.UUID;

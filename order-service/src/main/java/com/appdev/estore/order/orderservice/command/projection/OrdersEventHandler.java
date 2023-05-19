@@ -2,6 +2,7 @@ package com.appdev.estore.order.orderservice.command.projection;
 
 import com.appdev.estore.order.orderservice.command.event.OrderApprovedEvent;
 import com.appdev.estore.order.orderservice.command.event.OrderCreateEvent;
+import com.appdev.estore.order.orderservice.command.event.OrderRejectEvent;
 import com.appdev.estore.order.orderservice.data.OrderEntity;
 import com.appdev.estore.order.orderservice.data.repository.OrderRepository;
 import java.util.Objects;
@@ -43,11 +44,7 @@ public class OrdersEventHandler {
     public void on(OrderApprovedEvent orderApprovedEvent) {
         log.info("on OrderApprovedEvent");
         try {
-            OrderEntity byOrderId = orderRepository.findByOrderId(orderApprovedEvent.getOrderId());
-            if (Objects.isNull(byOrderId)) {
-                log.error("Order id {} not found", orderApprovedEvent.getOrderId());
-                throw new IllegalStateException("Order id not found");
-            }
+            OrderEntity byOrderId = getOrderEntity(orderApprovedEvent.getOrderId());
             byOrderId.setOrderStatus(orderApprovedEvent.getOrderStatus());
             orderRepository.save(byOrderId);
             log.info("Order {} has been updated to {}", orderApprovedEvent.getOrderId(),
@@ -55,6 +52,26 @@ public class OrdersEventHandler {
         } catch (Exception exception) {
             log.error("Exception {}", exception.getLocalizedMessage());
         }
+    }
+
+    @EventHandler
+    public void on(OrderRejectEvent event) {
+        log.info("on OrderRejectEvent");
+        OrderEntity orderEntity = getOrderEntity(event.getOrderId());
+        orderEntity.setOrderStatus(event.getOrderStatus());
+        orderEntity.setReason(event.getReason());
+        orderRepository.save(orderEntity);
+        log.info("Order {} has been updated to {} reason {}", orderEntity.getOrderId(),
+                orderEntity.getOrderStatus(), orderEntity.getReason());
+    }
+
+    private OrderEntity getOrderEntity(String orderId) {
+        OrderEntity byOrderId = orderRepository.findByOrderId(orderId);
+        if (Objects.isNull(byOrderId)) {
+            log.error("Order id {} not found", orderId);
+            throw new IllegalStateException("Order id not found");
+        }
+        return byOrderId;
     }
 
 }
