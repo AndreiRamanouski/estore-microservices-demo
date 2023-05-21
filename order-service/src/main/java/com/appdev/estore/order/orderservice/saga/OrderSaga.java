@@ -13,6 +13,8 @@ import com.appdev.estore.order.orderservice.command.commands.RejectOrderCommand;
 import com.appdev.estore.order.orderservice.command.event.OrderApprovedEvent;
 import com.appdev.estore.order.orderservice.command.event.OrderCreateEvent;
 import com.appdev.estore.order.orderservice.command.event.OrderRejectEvent;
+import com.appdev.estore.order.orderservice.command.model.response.OrderSummary;
+import com.appdev.estore.order.orderservice.data.query.FindOrderQuery;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
@@ -31,6 +33,7 @@ import org.axonframework.modelling.saga.EndSaga;
 import org.axonframework.modelling.saga.SagaEventHandler;
 import org.axonframework.modelling.saga.StartSaga;
 import org.axonframework.queryhandling.QueryGateway;
+import org.axonframework.queryhandling.QueryUpdateEmitter;
 import org.axonframework.spring.stereotype.Saga;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -47,6 +50,9 @@ public class OrderSaga {
 
     @Autowired
     private transient DeadlineManager deadlineManager;
+
+    @Autowired
+    private transient QueryUpdateEmitter queryUpdateEmitter;
 
     private static final String PAYMENT_PROCESSING_DEADLINE = "payment-processing-deadline";
 
@@ -156,6 +162,9 @@ public class OrderSaga {
                 event.getOrderId(), event.getOrderStatus());
         //add response entity
         //        SagaLifecycle.end(); the same as @EndSaga
+
+        queryUpdateEmitter.emit(FindOrderQuery.class, query -> true,
+                OrderSummary.builder().orderId(event.getOrderId()).orderStatus(event.getOrderStatus()).build());
     }
 
     @SagaEventHandler(associationProperty = "orderId")
@@ -170,6 +179,9 @@ public class OrderSaga {
         log.info("handle OrderRejectEvent");
         log.info("The order saga has been completed!!! The order has been canceled. Order id {}, reason {}",
                 event.getOrderId(), event.getReason());
+        queryUpdateEmitter.emit(FindOrderQuery.class, query -> true,
+                OrderSummary.builder().orderId(event.getOrderId()).orderStatus(event.getOrderStatus())
+                        .reason(event.getReason()).build());
 
     }
 

@@ -22,7 +22,7 @@ public class OrderEntity {
 
     @Id
     @Column(unique = true)
-    public String orderId;
+    private String orderId;
     private String productId;
     private String userId;
     private int quantity;
