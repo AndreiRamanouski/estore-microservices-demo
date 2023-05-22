@@ -33,3 +33,5 @@ axon:
     processors:
       product-group:
         mode: subscribing
+#        to replay events
+#        mode: tracking

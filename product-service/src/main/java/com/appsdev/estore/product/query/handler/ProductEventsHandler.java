@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
+import org.axonframework.eventhandling.ResetHandler;
 import org.axonframework.messaging.interceptors.ExceptionHandler;
 import org.springframework.stereotype.Component;
 
@@ -78,5 +79,10 @@ public class ProductEventsHandler {
         }
         ProductEntity productEntity = productRepository.saveAndFlush(byProductId);
         log.info("Product quantity for {} updated to {}", productEntity.getTitle(), productEntity.getQuantity());
+    }
+
+    @ResetHandler
+    public void reset(){
+        productRepository.deleteAll();
     }
 }
