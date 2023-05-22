@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
+import org.axonframework.eventhandling.ResetHandler;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -25,6 +26,11 @@ public class ProductLookupEventsHandler {
                 .title(productCreateEvent.getTitle())
                 .build());
 
+    }
+
+    @ResetHandler
+    public void reset(){
+        productLookupRepository.deleteAll();
     }
 
 }
